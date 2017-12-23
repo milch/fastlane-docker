@@ -1,0 +1,13 @@
+lane :release do
+  check_env
+
+  docker_login
+  docker_build(repository: 'fastlanetools/fastlane')
+  docker_push
+end
+
+private_lane :check_env do
+  %w[DOCKER_LOGIN_USER DOCKER_LOGIN_PASSWORD].each do |env|
+    throw "Missing ENV var #{env}" unless ENV.include?(env)
+  end
+end
