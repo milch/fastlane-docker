@@ -1,20 +1,3 @@
-FROM debian:jessie as itms_installer
-
-ENV ITMS_VERSION "1.9.7"
-USER root
-
-WORKDIR /tmp
-
-RUN apt-get update \
-	&& apt-get install sudo
-
-# Install iTMSTransporter
-ADD iTMSTransporter_installer_linux_$ITMS_VERSION.sh .
-RUN ./iTMSTransporter_installer_linux_$ITMS_VERSION.sh --target itms --noexec \
-	&& cd itms \
-	&& cat License.txt \
-	&& yes | env MORE="-V" ./install_script.sh
-
 FROM buildpack-deps:jessie as xar_builder
 
 ENV XAR_VERSION "1.6.1"
@@ -60,17 +43,13 @@ USER root
 RUN echo 'deb http://deb.debian.org/debian jessie-backports main' > /etc/apt/sources.list.d/jessie-backports.list \
 	&& apt-get update \
 	&& apt-get install --yes \
-		openjdk-8-jre-headless="$JAVA_DEBIAN_VERSION" \
-		ca-certificates-java="$CA_CERTIFICATES_JAVA_VERSION" \
 		make \
 		shellcheck \
 	&& apt-get clean \
-	&& rm -rf /var/lib/apt/lists/* \
-	&& /var/lib/dpkg/info/ca-certificates-java.postinst configure
+	&& rm -rf /var/lib/apt/lists/*
 
 USER circleci
 
-COPY --from=itms_installer /usr/local/itms /usr/local/itms
 COPY --from=xar_builder /tmp/xar /tmp/xar
 
 RUN cd /tmp/xar \
