@@ -4,14 +4,6 @@ lane :release do
   ensure_git_status_clean
 
   generate_dockerfiles
-
-  git_add(path: 'generated')
-  if `git status` =~ /no changes added to commit/i
-    UI.success('No changes, all done ✅')
-  else
-    git_commit(message: 'Update generated Dockerfiles', path: 'generated')
-    push_to_git_remote
-  end
 end
 
 lane :release_direct do
@@ -29,6 +21,8 @@ private_lane :check_env do
 end
 
 lane :generate_dockerfiles do
+  ensure_git_branch(branch: 'master')
+
   Dir.chdir('..') do
     # Clean old dir
     FileUtils.rm_rf('generated')
@@ -38,9 +32,25 @@ lane :generate_dockerfiles do
     list_of_tags.map { |o| o['name'] }.each do |tag|
       result = template.result(binding)
 
-      folder = "generated/#{tag}/"
+      folder = 'generated'
+      `git checkout -b #{folder}/#{tag}`
       FileUtils.mkdir_p(folder)
       File.write(File.join(folder, 'Dockerfile'), result)
+      git_add(path: folder)
+      if `git status` =~ /no changes added to commit/i
+        UI.success("No changes for #{tag}")
+      else
+        git_commit(
+          message: "Update generated Dockerfile for #{tag}",
+          path: 'generated'
+        )
+        add_git_tag(
+          tag: tag
+        )
+      end
     end
   end
+
+  `git checkout master`
+  push_to_git_remote
 end
