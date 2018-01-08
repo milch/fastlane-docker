@@ -22,6 +22,11 @@ xcode-select --install
 fastlane release
 ```
 
+### generate_dockerfiles
+```
+fastlane generate_dockerfiles
+```
+
 
 ----
 

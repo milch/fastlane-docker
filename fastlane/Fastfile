@@ -1,3 +1,5 @@
+require 'open-uri'
+
 lane :release do
   check_env
 
@@ -9,5 +11,19 @@ end
 private_lane :check_env do
   %w[DOCKER_LOGIN_USER DOCKER_LOGIN_PASSWORD].each do |env|
     throw "Missing ENV var #{env}" unless ENV.include?(env)
+  end
+end
+
+lane :generate_dockerfiles do
+  Dir.chdir('..') do
+    template = ERB.new(File.read('Dockerfile.erb'))
+    list_of_tags = JSON.parse(open('https://registry.hub.docker.com/v1/repositories/circleci/ruby/tags').read)
+    list_of_tags.map { |o| o['name'] }.each do |tag|
+      result = template.result(binding)
+
+      folder = "generated/#{tag}/"
+      FileUtils.mkdir_p(folder)
+      File.write(File.join(folder, 'Dockerfile'), result)
+    end
   end
 end
