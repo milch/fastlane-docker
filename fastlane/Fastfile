@@ -29,7 +29,11 @@ lane :generate_dockerfiles do
     result = template.result(binding)
 
     folder = 'generated'
-    switch_to_branch("#{folder}/#{tag}")
+    if tag == 'latest'
+      switch_to_branch('master')
+    else
+      switch_to_branch("#{folder}/#{tag}")
+    end
 
     Dir.chdir('..') do
       FileUtils.mkdir_p(folder)
