@@ -49,7 +49,8 @@ lane :generate_dockerfiles do
         path: 'generated'
       )
       add_git_tag(
-        tag: tag
+        tag: tag,
+        force: true
       )
     end
 
