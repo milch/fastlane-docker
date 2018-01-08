@@ -1,6 +1,20 @@
 require 'open-uri'
 
 lane :release do
+  ensure_git_status_clean
+
+  generate_dockerfiles
+
+  git_add(path: 'generated')
+  if `git status` =~ /no changes added to commit/i
+    UI.success('No changes, all done ✅')
+  else
+    git_commit(message: 'Update generated Dockerfiles', path: 'generated')
+    push_to_git_remote
+  end
+end
+
+lane :release_direct do
   check_env
 
   docker_login
@@ -16,6 +30,9 @@ end
 
 lane :generate_dockerfiles do
   Dir.chdir('..') do
+    # Clean old dir
+    FileUtils.rm_rf('generated')
+
     template = ERB.new(File.read('Dockerfile.erb'))
     list_of_tags = JSON.parse(open('https://registry.hub.docker.com/v1/repositories/circleci/ruby/tags').read)
     list_of_tags.map { |o| o['name'] }.each do |tag|
