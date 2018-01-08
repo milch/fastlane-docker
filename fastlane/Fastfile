@@ -23,34 +23,43 @@ end
 lane :generate_dockerfiles do
   ensure_git_branch(branch: 'master')
 
-  Dir.chdir('..') do
-    # Clean old dir
-    FileUtils.rm_rf('generated')
+  template = ERB.new(File.read('../Dockerfile.erb'))
+  list_of_tags = JSON.parse(open('https://registry.hub.docker.com/v1/repositories/circleci/ruby/tags').read)
+  list_of_tags.map { |o| o['name'] }.each do |tag|
+    result = template.result(binding)
 
-    template = ERB.new(File.read('Dockerfile.erb'))
-    list_of_tags = JSON.parse(open('https://registry.hub.docker.com/v1/repositories/circleci/ruby/tags').read)
-    list_of_tags.map { |o| o['name'] }.each do |tag|
-      result = template.result(binding)
+    folder = 'generated'
+    switch_to_branch("#{folder}/#{tag}")
 
-      folder = 'generated'
-      `git checkout -b #{folder}/#{tag}`
+    Dir.chdir('..') do
       FileUtils.mkdir_p(folder)
       File.write(File.join(folder, 'Dockerfile'), result)
-      git_add(path: folder)
-      if `git status` =~ /no changes added to commit/i
-        UI.success("No changes for #{tag}")
-      else
-        git_commit(
-          message: "Update generated Dockerfile for #{tag}",
-          path: 'generated'
-        )
-        add_git_tag(
-          tag: tag
-        )
-      end
     end
+
+    git_add(path: folder)
+    if `git status` =~ /no changes added to commit|nothing to commit/i
+      UI.success("No changes for #{tag}")
+    else
+      git_commit(
+        message: "Update generated Dockerfile for #{tag}",
+        path: 'generated'
+      )
+      add_git_tag(
+        tag: tag
+      )
+    end
+
+    switch_to_branch('master')
   end
 
-  `git checkout master`
   push_to_git_remote
+end
+
+def switch_to_branch(name)
+  `git rev-parse --verify #{name}`
+  if $?.success?
+    `git checkout #{name}`
+  else
+    `git checkout -b #{name}`
+  end
 end
