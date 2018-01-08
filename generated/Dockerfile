@@ -18,7 +18,7 @@ RUN tar -xzf xar-$XAR_VERSION.tar.gz \
 ###############
 # Final image #
 ###############
-FROM circleci/ruby:latest
+FROM circleci/ruby:rc-node-browsers
 MAINTAINER milch
 
 ENV PATH $PATH:/usr/local/itms/bin
