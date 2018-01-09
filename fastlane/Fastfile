@@ -54,5 +54,9 @@ lane :generate_dockerfiles do
   else
     git_commit(message: 'Update generated Dockerfiles', path: 'generated')
   end
-  push_to_git_remote
+  if ENV['GITHUB_API_KEY']
+    `git push -f -q https://#{ENV['GITHUB_USER']}:#{ENV['GITHUB_API_KEY']}@github.com/milch/fastlane-docker`
+  else
+    push_to_git_remote
+  end
 end
