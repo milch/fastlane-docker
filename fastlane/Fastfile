@@ -25,7 +25,18 @@ end
 lane :generate_dockerfiles do
   template = ERB.new(File.read('../Dockerfile.erb'))
   list_of_tags = JSON.parse(open('https://registry.hub.docker.com/v1/repositories/circleci/ruby/tags').read)
-  list_of_tags.map { |o| o['name'] }.each do |tag|
+  list_of_tags = list_of_tags.map { |o| o['name'] }
+
+  if ENV['WORKER_COUNT']
+    count = ENV['WORKER_COUNT'].to_i
+    my_index = ENV['WORKER_IDX'].to_i
+    list_of_tags = list_of_tags.to_enum
+                               .with_index
+                               .group_by { |_t, i| i % count }
+                               .values[my_index]
+                               .map(&:first)
+  end
+  list_of_tags.each do |tag|
     result = template.result(binding)
 
     folder = "generated/#{tag}"

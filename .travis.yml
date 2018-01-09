@@ -4,6 +4,12 @@ services:
   - docker
 rvm:
   - 2.4.1
+env:
+  - WORKER_COUNT=5 WORKER_IDX=0
+  - WORKER_COUNT=5 WORKER_IDX=1
+  - WORKER_COUNT=5 WORKER_IDX=2
+  - WORKER_COUNT=5 WORKER_IDX=3
+  - WORKER_COUNT=5 WORKER_IDX=4
 before_install: gem install bundler
 install: bundle install
 script:
