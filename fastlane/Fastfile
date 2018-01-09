@@ -2,8 +2,9 @@ require 'open-uri'
 
 lane :release do
   ensure_git_status_clean
-  docker_login
+  check_env
 
+  docker_login
   generate_dockerfiles
 end
 

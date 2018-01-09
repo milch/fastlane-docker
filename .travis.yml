@@ -1,0 +1,10 @@
+sudo: required
+language: ruby
+services:
+  - docker
+rvm:
+  - 2.4.1
+before_install: gem install bundler
+install: bundle install
+script:
+  - bundle exec fastlane release
