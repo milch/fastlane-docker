@@ -1,2 +1,4 @@
 /fastlane/report.xml
 .DS_Store
+
+travis_wait_*
