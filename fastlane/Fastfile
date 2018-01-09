@@ -36,7 +36,7 @@ lane :generate_dockerfiles do
                                .values[my_index]
                                .map(&:first)
   end
-  list_of_tags.each do |tag|
+  list_of_tags.each_with_index do |tag, index|
     result = template.result(binding)
 
     folder = "generated/#{tag}"
@@ -57,6 +57,9 @@ lane :generate_dockerfiles do
       repository: 'fastlanetools/fastlane',
       tag: tag
     )
+
+    # Eventually images become too large, delete the older ones
+    `docker rmi $(docker images -q)` if (index % 8).zero?
   end
 
   git_add(path: 'generated')
