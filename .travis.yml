@@ -13,4 +13,4 @@ env:
 before_install: gem install bundler
 install: bundle install
 script:
-  - travis_wait 50 bundle exec fastlane release
+  - bundle exec fastlane release
